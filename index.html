@@ -27,10 +27,9 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
 .chip.on{background:#e20612;border-color:#e20612;color:#fff}
 #lensRow .chip{min-width:56px;font-weight:600}
 .slider{display:flex;align-items:center;gap:10px;padding:3px 16px;font-size:12px}
-.slider label{width:78px;color:#aaa}
+.slider label{width:84px;color:#aaa}
 .slider input{flex:1;accent-color:#e20612}
-.slider input:disabled{opacity:.3}
-.slider span{width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.slider span{width:40px;text-align:right;font-variant-numeric:tabular-nums}
 #adv{display:none}
 #adv.show{display:block}
 #bottom{display:flex;align-items:center;justify-content:space-between;padding:8px 22px 0}
@@ -40,7 +39,19 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
 #busy.show{display:flex}
 .spin{width:40px;height:40px;border:4px solid #333;border-top-color:#e20612;border-radius:50%;animation:s 1s linear infinite}
 @keyframes s{to{transform:rotate(360deg)}}
-#toast{position:fixed;left:50%;bottom:30%;transform:translateX(-50%);background:rgba(20,20,20,.92);padding:10px 16px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;z-index:10;pointer-events:none;text-align:center;max-width:85%}
+#toast{position:fixed;left:50%;bottom:30%;transform:translateX(-50%);background:rgba(20,20,20,.94);padding:10px 16px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;z-index:10;pointer-events:none;text-align:center;max-width:88%}
+#learn{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;z-index:8;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 16px) 14px 30px;user-select:text}
+#learn.show{display:block}
+.card{background:#151515;border:1px solid #333;border-radius:16px;padding:16px;max-width:520px;margin:0 auto;font-size:13px;line-height:1.6}
+.card h3{font-size:16px;margin-bottom:6px}
+.card p{color:#aaa;margin-bottom:10px}
+.card select{width:100%;padding:10px;background:#000;color:#eee;border:1px solid #444;border-radius:10px;font-size:14px;margin:6px 0 10px}
+.btn2{display:block;width:100%;padding:12px;margin:6px 0;background:#222;border:1px solid #444;border-radius:12px;color:#eee;font-size:14px;text-align:left}
+.btn2.red{background:#e20612;border-color:#e20612;text-align:center;font-weight:700}
+.btn2.half{display:inline-block;width:49%;text-align:center;font-size:13px}
+.fn{font-size:11px;color:#7c7;margin:-2px 0 6px 4px;min-height:14px;word-break:break-all}
+.sv{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #2a2a2a;gap:8px}
+.sv button{background:none;border:1px solid #555;color:#f88;border-radius:8px;padding:4px 10px;font-size:12px;flex:none}
 </style>
 </head>
 <body>
@@ -54,18 +65,16 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
   </div>
   <div id="stage">
     <div id="frame"><canvas id="gl"></canvas><canvas id="overlay"></canvas></div>
-    <div id="msg">กด <b>ถ่ายรูป</b> เพื่อเปิดกล้อง Xiaomi<br>หรือกด <b>นำเข้ารูป</b> เพื่อเลือกรูปจากแกลเลอรี<br><br><small>แนะนำ: ถ่ายด้วยแอปกล้อง Xiaomi (โหมดพอร์ตเทรต 50MP)<br>แล้วนำเข้ามาแต่งโทนที่นี่</small></div>
+    <div id="msg">กด <b>ถ่ายรูป</b> เพื่อเปิดกล้อง Xiaomi<br>หรือกด <b>นำเข้ารูป</b> เพื่อเลือกรูปจากแกลเลอรี<br><br><small>โฟกัสและความเบลอมาจากเลนส์จริงตอนถ่าย<br>แตะจุดที่ต้องการให้ชัดในกล้อง Xiaomi ก่อนกดชัตเตอร์</small></div>
   </div>
   <div id="info"></div>
   <div id="controls">
     <div class="row" id="lensRow"></div>
-    <div class="slider"><button class="chip" id="bokehBtn">เบลอเสริม: ปิด</button><input type="range" id="ap" min="0" max="100" value="0"><span id="apV"></span></div>
     <div id="adv">
+      <div class="slider"><label>ความเข้มโทน</label><input type="range" id="amt" min="0" max="100" value="100"><span id="amtV"></span></div>
       <div class="slider"><label>Halation</label><input type="range" id="hal" min="0" max="100" value="0"><span id="halV"></span></div>
       <div class="slider"><label>เกรน 35mm</label><input type="range" id="grain" min="0" max="100" value="0"><span id="grainV"></span></div>
       <div class="slider"><label>ขนาดเกรน</label><input type="range" id="gsize" min="8" max="40" value="15"><span id="gsizeV"></span></div>
-      <div class="slider"><label>บอลโบเก้</label><input type="range" id="ball" min="0" max="100" value="50"><span id="ballV"></span></div>
-      <div class="slider"><label>โซนโฟกัส</label><input type="range" id="zone" min="5" max="40" value="16"><span id="zoneV"></span></div>
     </div>
     <div class="row" id="lookRow"></div>
     <div id="bottom">
@@ -75,37 +84,48 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
     </div>
   </div>
 </div>
+
+<div id="learn"><div class="card">
+  <h3>สอนสีจากเครื่องจริง</h3>
+  <p>ใช้รูปฉากเดียวกัน 2 รูป: รูปที่ไม่ใส่ Look และรูปที่ใส่ Look แล้ว แอปจะเทียบสีทีละพิกเซลเพื่อสร้างโทนสีจากเครื่องของคุณเอง</p>
+  <b>ชื่อโทน</b>
+  <select id="lname"></select>
+  <button class="btn2" id="pickA">1. เลือกรูปต้นฉบับ (ไม่ใส่ Look)</button><div class="fn" id="aName"></div>
+  <button class="btn2" id="pickB">2. เลือกรูปที่ใส่ Look แล้ว</button><div class="fn" id="bName"></div>
+  <button class="btn2 red" id="buildBtn">3. สร้างโทนสี</button>
+  <div id="saved" style="margin-top:14px"></div>
+  <div style="margin-top:10px"><button class="btn2 half" id="bkBtn">สำรองโทนทั้งหมด</button> <button class="btn2 half" id="rsBtn">กู้คืนจากไฟล์</button></div>
+  <button class="btn2" id="closeL" style="text-align:center;margin-top:10px">ปิด</button>
+</div></div>
+
 <input type="file" id="file" accept="image/*" hidden>
 <input type="file" id="camFile" accept="image/*" capture="environment" hidden>
+<input type="file" id="fA" accept="image/*" hidden>
+<input type="file" id="fB" accept="image/*" hidden>
+<input type="file" id="fJ" hidden>
 <div id="busy"><div class="spin"></div><div id="busyT">กำลังประมวลผล...</div></div>
 <div id="toast"></div>
 
 <script>
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const N=17,N3=N*N*N,LS='cine_looks_v1',MAXPX=60e6;
+const CROPS=[0,35,50,75,85,135];
+const LOOK_NAMES=['Leica Standard','Leica Vivid','Leica Natural','Leica Blue','Leica Chrome','Leica Classic','Leica Contemporary','Leica Eternal','Leica Brass','Leica Teal','Leica Monochrome Natural','Leica Monochrome High Contrast','Leica I Model A','Leica Essential M9','Leica Essential M3 Monopan 50','Leica Vibrant','Leica Sepia','Leica BW','Cinematic','Teal Mist','Scarlet','Monsoon'];
 
-/* ---------- โทนสี ---------- */
-const D={temp:0,tint:0,con:1,curve:0,sat:1,red:0,teal:0,sh:[0,0,0],hi:[0,0,0],split:1,fade:0,roll:0,vig:0,mono:0,mw:[.299,.587,.114],hal:0,grain:0};
-const LOOKS=[
- {name:'Original (สีจากกล้อง)'},
- {name:'Leica Authentic',temp:.01,con:1.12,curve:.25,sat:.95,red:.12,sh:[0,0,.012],hi:[.012,.006,0],roll:.15,vig:.3,hal:15,grain:10},
- {name:'Leica Vibrant',temp:.015,con:1.08,curve:.2,sat:1.22,red:.15,sh:[0,0,.01],hi:[.01,.005,0],roll:.25,vig:.18,hal:10,grain:5},
- {name:'Leica M10-R (Maestro II)',temp:.025,tint:-.005,con:1.06,curve:.3,sat:1.04,red:.25,teal:.1,sh:[-.004,.002,.012],hi:[.015,.008,-.004],fade:.01,roll:.35,vig:.22,hal:15,grain:12},
- {name:'Leica M9 CCD',temp:.03,con:1.22,curve:.45,sat:1.12,red:.45,teal:.05,sh:[-.01,0,.02],hi:[.02,.005,-.01],vig:.32,hal:12,grain:18},
- {name:'Leica M3 Monopan 50',mono:1,mw:[.3,.59,.11],con:1.25,curve:.4,roll:.05,vig:.35,hal:0,grain:35},
- {name:'Kodak Vision3 500T',temp:-.01,con:1.08,curve:.3,sat:.95,red:.1,teal:.45,sh:[-.03,.01,.04],hi:[.05,.02,-.035],fade:.03,roll:.3,vig:.3,hal:55,grain:40},
- {name:'Fuji Eterna 250D',temp:-.01,tint:.01,con:.88,curve:.15,sat:.78,teal:.5,sh:[-.01,.02,.03],hi:[.01,.012,0],fade:.05,roll:.45,vig:.2,hal:25,grain:28},
- {name:'90s Hong Kong (Chungking Neon)',temp:.04,tint:.04,con:1.15,curve:.35,sat:1.28,red:.4,teal:.25,sh:[-.01,.04,.03],hi:[.06,.01,-.02],fade:.04,roll:.2,vig:.45,hal:60,grain:55},
- {name:'Ilford HP5 Plus B&W',mono:1,mw:[.32,.5,.18],con:1.12,curve:.35,fade:.03,roll:.15,vig:.3,hal:0,grain:60},
- {name:'Kodak Portra 400',temp:.04,tint:-.005,con:.92,curve:.2,sat:.88,red:.08,teal:.15,sh:[0,.01,.02],hi:[.035,.018,-.008],fade:.04,roll:.4,vig:.15,hal:25,grain:30}
-].map(l=>({...D,...l}));
-const CROPS=[0,35,50,75,85];
-const MAXPX=60e6;
+function b64(u8){let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(s);}
+function unb64(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-let crop=0,baseF=23,fnum=1.2,bokeh=false,lookIdx=0,hal=0,grain=0,gsz=1.5,ball=.5,zone=.16;
-let focus={x:.5,y:.42},focusT=0;
+let looks=[];
+try{looks=JSON.parse(localStorage.getItem(LS)||'[]').map(o=>({name:o.name,mono:!!o.mono,q:o.q||0,lut:unb64(o.d)})).filter(l=>l.lut.length===N3*3);}catch(e){looks=[];}
+function saveLooks(){try{localStorage.setItem(LS,JSON.stringify(looks.map(l=>({name:l.name,mono:l.mono,q:l.q,d:b64(l.lut)}))));}catch(e){alert('พื้นที่เก็บโทนเต็ม กรุณาลบบางโทนก่อน');}}
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+
+let crop=0,baseF=23,hasF=false,lookIdx=0,amt=1,hal=0,grain=0,gsz=1.5;
+let center={x:.5,y:.5},drag=false;
 let bmp=null,srcW=0,srcH=0,softW=0,softH=0,exif={},loaded=false;
-let dirty=true,exporting=false,frameMode=1;
+let dirty=true,exporting=false,frameMode=1,fileA=null,fileB=null;
 
 const cv=$('gl'),ov=$('overlay'),octx=ov.getContext('2d'),frame=$('frame');
 const gl=cv.getContext('webgl',{preserveDrawingBuffer:true,antialias:false,premultipliedAlpha:false});
@@ -114,77 +134,42 @@ if(!gl)alert('เครื่องนี้ไม่รองรับ WebGL');
 /* ---------- Shader ---------- */
 const VS=`attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}`;
 const FS=`precision highp float;
-uniform sampler2D uSharp,uSoft;
-uniform vec2 uSoftPx,uCropS,uCropO,uSharpO,uSharpS,uFocus,uOut,uTileO;
-uniform float uCanvasH,uAspect,uRad,uHalR,uFocusR,uSigma,uTaps,uBall,uHal,uGrain,uGSize,uSeed,uVig,uBokeh;
-uniform float uTemp,uTint,uCon,uCurve,uSat,uRed,uTeal,uSplit,uFade,uRoll,uMono;
-uniform vec3 uSh,uHi,uMw;
+uniform sampler2D uSharp,uSoft,uLut;
+uniform vec2 uSoftPx,uCropS,uCropO,uSharpO,uSharpS,uOut,uTileO;
+uniform float uCanvasH,uHalR,uHal,uGrain,uGSize,uSeed,uUseLut,uLutAmt,uMono;
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y);}
-vec3 lin(vec3 c){return pow(c,vec3(2.2));}
+vec3 lin(vec3 c){return pow(max(c,vec3(0.0)),vec3(2.2));}
 vec3 gam(vec3 c){return pow(max(c,vec3(0.0)),vec3(1.0/2.2));}
 float luma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
+vec3 applyLut(vec3 c){
+ c=clamp(c,0.0,1.0)*16.0;
+ float b0=floor(c.b);float b1=min(b0+1.0,16.0);float f=c.b-b0;
+ float y=(c.g+0.5)/17.0;
+ vec3 s0=texture2D(uLut,vec2((b0*17.0+c.r+0.5)/289.0,y)).rgb;
+ vec3 s1=texture2D(uLut,vec2((b1*17.0+c.r+0.5)/289.0,y)).rgb;
+ return mix(s0,s1,f);
+}
 void main(){
  vec2 px=uTileO+vec2(gl_FragCoord.x,uCanvasH-gl_FragCoord.y);
  vec2 uv=px/uOut;
  vec2 tc=uCropO+uv*uCropS;
- vec3 sharp=lin(texture2D(uSharp,(tc-uSharpO)/uSharpS).rgb);
- vec3 col=sharp;
- if(uBokeh>0.5){
-  vec2 d=uv-uFocus; d.x*=uAspect;
-  float e=length(vec2(d.x/0.62,d.y));
-  float x=max(e-uFocusR,0.0);
-  float r=(1.0-exp(-(x*x)/(2.0*uSigma*uSigma)))*uRad;
-  if(r>0.35){
-   vec2 cd=uv-0.5; cd.x*=uAspect; float cl=length(cd);
-   vec2 n=cl>0.001?cd/cl:vec2(0.0);
-   float sq=clamp(cl*0.8,0.0,0.45);
-   float rot=hash(px+uSeed)*6.2831853;
-   vec3 acc=vec3(0.0); float ws=0.0;
-   for(int i=0;i<160;i++){
-    if(float(i)>=uTaps) break;
-    float fi=float(i)+0.5;
-    float a=fi*2.3999632+rot;
-    vec2 o=vec2(cos(a),sin(a))*sqrt(fi/uTaps)*r;
-    o-=n*dot(o,n)*sq;
-    vec3 s=lin(texture2D(uSoft,tc+o/uSoftPx).rgb);
-    float w=1.0+uBall*12.0*smoothstep(0.5,1.0,luma(s));
-    acc+=s*w; ws+=w;
-   }
-   col=mix(sharp,acc/ws,clamp(r/1.5,0.0,1.0));
-  }
- }
+ vec3 c=texture2D(uSharp,(tc-uSharpO)/uSharpS).rgb;
+ if(uUseLut>0.5) c=mix(c,applyLut(c),uLutAmt);
  if(uHal>0.001){
-  vec3 h=vec3(0.0);
+  float h=0.0;
   for(int i=0;i<12;i++){
    float a=float(i)*0.5235988;
    float rr=uHalR*(mod(float(i),2.0)<0.5?1.0:0.5);
    vec3 s=lin(texture2D(uSoft,tc+vec2(cos(a),sin(a))*rr/uSoftPx).rgb);
-   h+=vec3(max(luma(s)-0.6,0.0));
+   h+=max(luma(s)-0.6,0.0);
   }
-  col+=h/12.0*vec3(1.0,0.3,0.08)*uHal*4.0;
+  vec3 hc=mix(vec3(1.0,0.3,0.08),vec3(0.5),uMono);
+  c=gam(lin(c)+h/12.0*hc*uHal*4.0);
  }
- vec3 c=gam(col);
- c*=vec3(1.0+uTemp,1.0+uTint,1.0-uTemp);
- float L=dot(c,vec3(0.299,0.587,0.114));
- if(uMono>0.5){c=vec3(dot(c,uMw));}
- else{
-  float red=clamp((c.r-max(c.g,c.b))*2.5,0.0,1.0);
-  float grn=clamp((c.g-max(c.r,c.b))*3.0,0.0,1.0);
-  c.b=mix(c.b,c.g,grn*uTeal);
-  c.r*=1.0-grn*uTeal*0.35;
-  c=mix(vec3(L),c,uSat+uRed*red);
- }
- c=clamp((c-0.5)*uCon+0.5,0.0,1.0);
- c=mix(c,c*c*(3.0-2.0*c),uCurve);
- c=c*(1.0+uRoll)/(1.0+uRoll*c);
- float L2=dot(c,vec3(0.299,0.587,0.114));
- if(uMono<0.5) c+=uSh*(1.0-smoothstep(0.0,0.55,L2))*uSplit+uHi*smoothstep(0.45,1.0,L2)*uSplit;
- c=mix(vec3(uFade),vec3(1.0-uFade*0.4),c);
- vec2 vv=uv-0.5; vv.x*=uAspect;
- c*=1.0-uVig*smoothstep(0.25,0.85,length(vv)*1.2);
  if(uGrain>0.001){
+  float L2=luma(c);
   float g=(vnoise(px/uGSize+uSeed*13.0)-0.5)*1.6+(hash(px+uSeed)-0.5)*0.4;
   float gm=1.0-pow(abs(L2-0.5)*2.0,2.0)*0.75;
   vec3 gc=vec3(g);
@@ -205,30 +190,35 @@ const f1=(n,a)=>gl.uniform1f(u(n),a),f2=(n,a,b)=>gl.uniform2f(u(n),a,b);
 function mkTex(){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);return t;}
-const texSoft=mkTex(),texTile=mkTex();
+const texSoft=mkTex(),texTile=mkTex(),texLut=mkTex();
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
 function up(t,src){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);}
+function lutTex(u8){
+ const d=new Uint8Array(N3*4);
+ for(let i=0;i<N3;i++){const r=i%N,g=Math.floor(i/N)%N,b=Math.floor(i/(N*N));const p=(g*N*N+b*N+r)*4;
+  d[p]=u8[i*3];d[p+1]=u8[i*3+1];d[p+2]=u8[i*3+2];d[p+3]=255;}
+ gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,texLut);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,N*N,N,0,gl.RGBA,gl.UNSIGNED_BYTE,d);
+}
 
 const cropScale=()=>(crop&&crop>baseF)?baseF/crop:1;
+function cropRect(){const cs=cropScale();
+ return{cs,ox:Math.min(Math.max(center.x-cs/2,0),1-cs),oy:Math.min(Math.max(center.y-cs/2,0),1-cs)};}
 function outDims(){const cs=cropScale();return{ow:Math.round(srcW*cs),oh:Math.round(srcH*cs)};}
 
 function render(p){
  gl.viewport(0,p.ch-p.th,p.tw,p.th);
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,p.sharp);
  gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,texSoft);
- gl.uniform1i(u('uSharp'),0);gl.uniform1i(u('uSoft'),1);
- const cs=cropScale(),short=Math.min(softW,softH)*cs,effF=baseF/cs;
- f2('uCropS',cs,cs);f2('uCropO',(1-cs)/2,(1-cs)/2);
+ gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,texLut);
+ gl.uniform1i(u('uSharp'),0);gl.uniform1i(u('uSoft'),1);gl.uniform1i(u('uLut'),2);
+ f2('uCropS',p.cS,p.cS);f2('uCropO',p.cO[0],p.cO[1]);
  f2('uSharpO',p.sO[0],p.sO[1]);f2('uSharpS',p.sS[0],p.sS[1]);
- f2('uSoftPx',softW,softH);f2('uOut',p.ow,p.oh);f2('uTileO',p.tx,p.ty);f2('uFocus',focus.x,focus.y);
- f1('uCanvasH',p.ch);f1('uAspect',p.ow/p.oh);f1('uBokeh',bokeh?1:0);
- f1('uRad',short*0.035*(effF/50)*(1.2/fnum));
- f1('uHalR',short*0.012);
- f1('uSigma',0.10+0.30*(fnum-1.2)/6.8);
- f1('uFocusR',zone);f1('uTaps',p.taps);f1('uBall',ball);f1('uHal',hal);f1('uGrain',grain);
+ f2('uSoftPx',softW,softH);f2('uOut',p.ow,p.oh);f2('uTileO',p.tx,p.ty);
+ f1('uCanvasH',p.ch);f1('uHalR',Math.min(softW,softH)*0.012);f1('uHal',hal);f1('uGrain',grain);
  f1('uGSize',Math.max(1,gsz*Math.min(p.ow,p.oh)/1500));f1('uSeed',p.seed);
- const L=LOOKS[lookIdx];
- ['temp','tint','con','curve','sat','red','teal','split','fade','roll','mono','vig'].forEach(k=>f1('u'+k[0].toUpperCase()+k.slice(1),L[k]));
- gl.uniform3fv(u('uSh'),L.sh);gl.uniform3fv(u('uHi'),L.hi);gl.uniform3fv(u('uMw'),L.mw);
+ const lk=lookIdx>0?looks[lookIdx-1]:null;
+ f1('uUseLut',lk?1:0);f1('uLutAmt',amt);f1('uMono',lk&&lk.mono?1:0);
  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 }
 
@@ -246,57 +236,60 @@ function layout(){
 new ResizeObserver(layout).observe($('stage'));
 
 /* ---------- UI ---------- */
-function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,3000);}
+function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,3500);}
 function busy(on,t){$('busy').classList.toggle('show',on);if(t)$('busyT').textContent=t;}
 const mp=x=>(x/1e6).toFixed(1)+'MP';
 function showInfo(){
  if(!loaded){$('info').textContent='';return;}
  const o=outDims();
- $('info').textContent=`ต้นฉบับ ${srcW}×${srcH} (${mp(srcW*srcH)})  →  เซฟ ${o.ow}×${o.oh} (${mp(o.ow*o.oh)})`;
+ $('info').textContent=`ถ่ายที่ ${hasF?baseF+'mm':'(ไม่พบระยะเลนส์ ใช้ 23mm)'} · ต้นฉบับ ${mp(srcW*srcH)} → เซฟ ${o.ow}×${o.oh} (${mp(o.ow*o.oh)})`;
  [...$('lensRow').children].forEach(c=>{const f=+c.dataset.f;c.style.opacity=(f&&f<=baseF)?.3:1;});
 }
 CROPS.forEach(f=>{const b=document.createElement('button');b.className='chip';b.dataset.f=f;
  b.textContent=f?f+'mm':'เต็มเฟรม';b.onclick=()=>setCrop(f,true);$('lensRow').appendChild(b);});
 function setCrop(f,tell){
- if(f&&f<=baseF){toast(`รูปนี้ถ่ายที่ ${baseF}mm อยู่แล้ว ครอปเป็น ${f}mm ไม่ได้`);return;}
+ if(f&&loaded&&f<=baseF){toast(`รูปนี้ถ่ายที่ ${baseF}mm อยู่แล้ว ครอปเป็น ${f}mm ไม่ได้`);return;}
  crop=f;[...$('lensRow').children].forEach(c=>c.classList.toggle('on',+c.dataset.f===f));
  dirty=true;showInfo();
- if(tell&&loaded){const o=outDims();toast(f?`ครอป ${f}mm · ไฟล์จะเหลือ ${mp(o.ow*o.oh)}`:`เต็มเฟรม · ความละเอียดเต็ม ${mp(o.ow*o.oh)}`);}
+ if(tell&&loaded){const o=outDims();
+  toast(f?`${f}mm · ไฟล์จะเหลือ ${mp(o.ow*o.oh)} · แตะหรือลากบนรูปเพื่อเลือกตำแหน่ง`:`เต็มเฟรม · ความละเอียดเต็ม ${mp(o.ow*o.oh)}`);}
 }
 function bind(id,fn){const el=$(id);el.oninput=()=>{$(id+'V').textContent=fn(+el.value);dirty=true;};el.oninput();}
-function setSlider(id,v){$(id).value=v;$(id).oninput();}
-bind('ap',v=>{fnum=Math.round(1.2*Math.pow(8/1.2,v/100)*10)/10;return 'f/'+fnum;});
+bind('amt',v=>{amt=v/100;return v;});
 bind('hal',v=>{hal=v/100;return v;});
 bind('grain',v=>{grain=v/100;return v;});
 bind('gsize',v=>{gsz=v/10;return (v/10).toFixed(1);});
-bind('ball',v=>{ball=v/100;return v;});
-bind('zone',v=>{zone=v/100;return v;});
-function setBokeh(on){bokeh=on;$('bokehBtn').textContent='เบลอเสริม: '+(on?'เปิด':'ปิด');
- $('bokehBtn').classList.toggle('on',on);$('ap').disabled=!on;dirty=true;
- if(on)toast('แตะที่ตัวแบบเพื่อล็อกโฟกัส (เบลอจำลอง ไม่ใช่เบลอจากเลนส์)');}
-$('bokehBtn').onclick=()=>setBokeh(!bokeh);
-function selectLook(i){lookIdx=i;[...$('lookRow').children].forEach((c,k)=>c.classList.toggle('on',k===i));
- setSlider('hal',LOOKS[i].hal);setSlider('grain',LOOKS[i].grain);dirty=true;}
-LOOKS.forEach((l,i)=>{const b=document.createElement('button');b.className='chip';b.textContent=l.name;b.onclick=()=>selectLook(i);$('lookRow').appendChild(b);});
 $('advBtn').onclick=()=>$('adv').classList.toggle('show');
 const FM=['กรอบ: ปิด','กรอบ: Xiaomi','กรอบ: Leitzphone'];
 $('frameBtn').onclick=()=>{frameMode=(frameMode+1)%3;$('frameBtn').textContent=FM[frameMode];};
-frame.addEventListener('pointerdown',e=>{if(!bokeh)return;const r=frame.getBoundingClientRect();
- focus={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};focusT=performance.now();dirty=true;});
-setCrop(0);setBokeh(false);selectLook(0);
+
+function renderLooks(){
+ const row=$('lookRow');row.innerHTML='';
+ [{name:'Original (สีจากกล้อง)'}].concat(looks).forEach((l,i)=>{const b=document.createElement('button');
+  b.className='chip'+(i===lookIdx?' on':'');b.textContent=l.name;b.onclick=()=>selectLook(i);row.appendChild(b);});
+ const add=document.createElement('button');add.className='chip';add.style.borderStyle='dashed';
+ add.textContent='+ สอนสีจากเครื่อง';add.onclick=openLearn;row.appendChild(add);
+}
+function selectLook(i){lookIdx=(i>looks.length)?0:i;if(lookIdx>0)lutTex(looks[lookIdx-1].lut);renderLooks();dirty=true;}
+
+function setCenter(e){const r=frame.getBoundingClientRect();center={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};}
+frame.addEventListener('pointerdown',e=>{
+ if(!loaded)return;
+ if(!crop){toast('จุดโฟกัสถูกกำหนดตอนถ่ายด้วยเลนส์จริง · เลือก 35–135mm แล้วแตะเพื่อเลือกตำแหน่งครอป');return;}
+ drag=true;try{frame.setPointerCapture(e.pointerId);}catch(_){}setCenter(e);});
+frame.addEventListener('pointermove',e=>{if(drag)setCenter(e);});
+frame.addEventListener('pointerup',()=>drag=false);
+frame.addEventListener('pointercancel',()=>drag=false);
 
 function drawOverlay(){
  const W=ov.width,H=ov.height;if(!W)return;octx.clearRect(0,0,W,H);
- if(!bokeh||!loaded)return;
- const a=Math.max(0,1-(performance.now()-focusT)/2200),x=focus.x*W,y=focus.y*H,s=Math.min(W,H)*0.07;
- if(a>0){octx.save();octx.globalAlpha=a;octx.lineWidth=Math.max(1.5,W/400);
-  octx.strokeStyle='rgba(255,255,255,.7)';octx.setLineDash([8,8]);octx.beginPath();
-  octx.ellipse(x,y,zone*H*0.62,zone*H,0,0,Math.PI*2);octx.stroke();octx.setLineDash([]);
-  octx.strokeStyle='#ffcc00';const k=s*0.35;
-  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sy])=>{octx.beginPath();octx.moveTo(x+sx*s,y+sy*(s-k));octx.lineTo(x+sx*s,y+sy*s);octx.lineTo(x+sx*(s-k),y+sy*s);octx.stroke();});
-  octx.restore();}
- octx.globalAlpha=0.45+0.55*a;octx.fillStyle='#ffcc00';octx.font=`600 ${Math.round(H*0.022)}px system-ui`;
- octx.textAlign='center';octx.fillText('AF-L · BOKEH LOCK',x,y+s+H*0.035);octx.globalAlpha=1;
+ if(!loaded||!crop)return;
+ const {cs,ox,oy}=cropRect(),x=ox*W,y=oy*H,w=cs*W,h=cs*H;
+ octx.fillStyle='rgba(0,0,0,.6)';
+ octx.fillRect(0,0,W,y);octx.fillRect(0,y+h,W,H-y-h);octx.fillRect(0,y,x,h);octx.fillRect(x+w,y,W-x-w,h);
+ octx.strokeStyle='#fff';octx.lineWidth=Math.max(2,W/300);octx.strokeRect(x,y,w,h);
+ octx.fillStyle='#ffcc00';octx.font=`600 ${Math.round(H*0.028)}px system-ui`;octx.textAlign='left';
+ octx.fillText(crop+'mm',x+Math.round(W*0.02),y+Math.round(H*0.04));
 }
 
 /* ---------- EXIF / JPEG ---------- */
@@ -349,12 +342,11 @@ async function loadPhoto(f){
   try{bmp=await createImageBitmap(f,opt);}catch(_){bmp=await createImageBitmap(f);}
   srcW=bmp.width;srcH=bmp.height;
   const s=scaleCanvas(bmp,Math.min(1,2048/Math.max(srcW,srcH)));softW=s.width;softH=s.height;up(texSoft,s);
-  baseF=exif[0xA405]||23;
-  loaded=true;$('msg').style.display='none';
+  hasF=!!exif[0xA405];baseF=exif[0xA405]||23;
+  loaded=true;$('msg').style.display='none';center={x:.5,y:.5};
   if(crop&&crop<=baseF)crop=0;
-  setCrop(crop,false);
-  focus={x:.5,y:.42};layout();
-  toast(`โหลดแล้ว ${srcW}×${srcH} (${mp(srcW*srcH)})${sz&&sz.w*sz.h>MAXPX?' · ย่อจากต้นฉบับเพื่อไม่ให้แอปค้าง':''}`);
+  setCrop(crop,false);layout();
+  toast(`โหลดแล้ว ${srcW}×${srcH} (${mp(srcW*srcH)}) · ถ่ายที่ ${hasF?baseF+'mm':'ไม่ทราบระยะ'}${sz&&sz.w*sz.h>MAXPX?' · ย่อจากต้นฉบับเพื่อไม่ให้แอปค้าง':''}`);
  }catch(err){alert('เปิดรูปนี้ไม่ได้\nถ้าเป็นไฟล์ HEIF ให้ปิด HEIF ในการตั้งค่ากล้อง แล้วถ่ายใหม่เป็น JPEG');}
  busy(false);
 }
@@ -363,16 +355,124 @@ $('camBtn').onclick=()=>$('camFile').click();
 $('file').onchange=e=>{loadPhoto(e.target.files[0]);e.target.value='';};
 $('camFile').onchange=e=>{loadPhoto(e.target.files[0]);e.target.value='';};
 
+/* ---------- สอนสีจากเครื่อง (สร้าง 3D LUT จากคู่รูป) ---------- */
+async function loadSmall(f,w,h){
+ let bm;try{bm=await createImageBitmap(f,{imageOrientation:'from-image'});}catch(_){bm=await createImageBitmap(f);}
+ if(!w){w=240;h=Math.round(240*bm.height/bm.width);}
+ else if(Math.abs(bm.width/bm.height-w/h)>0.03){if(bm.close)bm.close();throw new Error('สัดส่วนรูปสองรูปไม่เท่ากัน ต้องถ่ายอัตราส่วนเดียวกัน (เช่น 4:3 ทั้งคู่)');}
+ const c=document.createElement('canvas');c.width=w;c.height=h;
+ const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(bm,0,0,w,h);if(bm.close)bm.close();
+ return{d:x.getImageData(0,0,w,h).data,w,h};
+}
+function lumArr(d,n){const L=new Float32Array(n);for(let i=0;i<n;i++)L[i]=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;return L;}
+function align(LA,LB,w,h,R){
+ let best=-2,bx=0,by=0;
+ for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){
+  let sa=0,sb=0,saa=0,sbb=0,sab=0,n=0;
+  for(let y=R;y<h-R;y+=2)for(let x=R;x<w-R;x+=2){const a=LA[y*w+x],b=LB[(y+dy)*w+x+dx];sa+=a;sb+=b;saa+=a*a;sbb+=b*b;sab+=a*b;n++;}
+  const c=(sab-sa*sb/n)/Math.sqrt(Math.max((saa-sa*sa/n)*(sbb-sb*sb/n),1e-12));
+  if(c>best){best=c;bx=dx;by=dy;}
+ }
+ return{dx:bx,dy:by,corr:best};
+}
+async function learn(fa,fb){
+ const A=await loadSmall(fa),B=await loadSmall(fb,A.w,A.h),w=A.w,h=A.h,R=8;
+ const LA=lumArr(A.d,w*h),LB=lumArr(B.d,w*h);
+ const al=align(LA,LB,w,h,R);
+ const S=new Float64Array(N3*3),Wt=new Float64Array(N3);let chroma=0,cn=0;
+ for(let y=R;y<h-R;y++)for(let x=R;x<w-R;x++){
+  const p=y*w+x,q=(y+al.dy)*w+x+al.dx,i=p*4,j=q*4;
+  const ar=A.d[i]/255,ag=A.d[i+1]/255,ab=A.d[i+2]/255,br=B.d[j]/255,bg=B.d[j+1]/255,bb=B.d[j+2]/255;
+  const gx=LA[p+1]-LA[p-1],gy=LA[p+w]-LA[p-w];
+  let wt=1/(1+(gx*gx+gy*gy)*400);
+  if(Math.max(ar,ag,ab)>0.98||Math.max(br,bg,bb)>0.98)wt*=0.1;
+  chroma+=Math.max(br,bg,bb)-Math.min(br,bg,bb);cn++;
+  const fr=ar*(N-1),fg=ag*(N-1),fb=ab*(N-1);
+  const r0=Math.min(fr|0,N-2),g0=Math.min(fg|0,N-2),b0=Math.min(fb|0,N-2);
+  const tr=fr-r0,tg=fg-g0,tb=fb-b0;
+  for(let k=0;k<8;k++){const ir=k&1,ig=(k>>1)&1,ib=(k>>2)&1;
+   const cw=wt*(ir?tr:1-tr)*(ig?tg:1-tg)*(ib?tb:1-tb);if(cw<1e-6)continue;
+   const n=(r0+ir)+(g0+ig)*N+(b0+ib)*N*N;
+   S[n*3]+=cw*(br-ar);S[n*3+1]+=cw*(bg-ag);S[n*3+2]+=cw*(bb-ab);Wt[n]+=cw;}
+ }
+ const D=new Float32Array(N3*3),K=new Uint8Array(N3),NB=[];
+ for(let n=0;n<N3;n++){
+  const r=n%N,g=((n/N)|0)%N,b=(n/(N*N))|0,o=[];
+  if(r>0)o.push(n-1);if(r<N-1)o.push(n+1);if(g>0)o.push(n-N);if(g<N-1)o.push(n+N);if(b>0)o.push(n-N*N);if(b<N-1)o.push(n+N*N);
+  NB.push(o);
+  if(Wt[n]>0.3){K[n]=1;for(let c=0;c<3;c++)D[n*3+c]=S[n*3+c]/Wt[n];}
+ }
+ for(let it=0;it<250;it++)for(let n=0;n<N3;n++){if(K[n])continue;const o=NB[n];
+  for(let c=0;c<3;c++){let s=0;for(const m of o)s+=D[m*3+c];D[n*3+c]=s/o.length;}}
+ for(let n=0;n<N3;n++){if(!K[n])continue;const a=0.6*(1-Math.min(Wt[n]/15,1));if(a<=0)continue;const o=NB[n];
+  for(let c=0;c<3;c++){let s=0;for(const m of o)s+=D[m*3+c];D[n*3+c]=D[n*3+c]*(1-a)+s/o.length*a;}}
+ const mono=chroma/cn<0.025,out=new Uint8Array(N3*3);
+ for(let n=0;n<N3;n++){
+  const r=n%N,g=((n/N)|0)%N,b=(n/(N*N))|0;
+  let v=[r/(N-1)+D[n*3],g/(N-1)+D[n*3+1],b/(N-1)+D[n*3+2]];
+  if(mono){const l=0.299*v[0]+0.587*v[1]+0.114*v[2];v=[l,l,l];}
+  for(let c=0;c<3;c++)out[n*3+c]=Math.round(Math.min(1,Math.max(0,v[c]))*255);
+ }
+ return{lut:out,mono,corr:al.corr};
+}
+LOOK_NAMES.forEach(n=>{const o=document.createElement('option');o.value=o.textContent=n;$('lname').appendChild(o);});
+{const o=document.createElement('option');o.value='__custom';o.textContent='ตั้งชื่อเอง...';$('lname').appendChild(o);}
+function renderSaved(){
+ const el=$('saved');
+ el.innerHTML=looks.length?'<b>โทนที่บันทึกไว้</b>':'<span style="color:#888">ยังไม่มีโทนที่บันทึกไว้</span>';
+ looks.forEach((l,i)=>{const d=document.createElement('div');d.className='sv';
+  d.innerHTML=`<span>${esc(l.name)} <small style="color:#888">· รูปตรงกัน ${l.q}%${l.mono?' · ขาวดำ':''}</small></span>`;
+  const b=document.createElement('button');b.textContent='ลบ';
+  b.onclick=()=>{if(!confirm('ลบโทน '+l.name+' ?'))return;looks.splice(i,1);saveLooks();selectLook(0);renderSaved();};
+  d.appendChild(b);el.appendChild(d);});
+}
+function openLearn(){renderSaved();$('learn').classList.add('show');}
+$('closeL').onclick=()=>$('learn').classList.remove('show');
+$('pickA').onclick=()=>$('fA').click();
+$('pickB').onclick=()=>$('fB').click();
+$('fA').onchange=e=>{fileA=e.target.files[0]||null;$('aName').textContent=fileA?'เลือกแล้ว: '+fileA.name:'';e.target.value='';};
+$('fB').onchange=e=>{fileB=e.target.files[0]||null;$('bName').textContent=fileB?'เลือกแล้ว: '+fileB.name:'';e.target.value='';};
+$('buildBtn').onclick=async()=>{
+ if(!fileA||!fileB){toast('เลือกรูปให้ครบทั้ง 2 รูปก่อน');return;}
+ let name=$('lname').value;
+ if(name==='__custom'){name=(prompt('ตั้งชื่อโทนสี')||'').trim();if(!name)return;}
+ busy(true,'กำลังเรียนรู้สีจากรูป...');await sleep(30);
+ try{
+  const r=await learn(fileA,fileB);busy(false);
+  if(r.corr<0.85&&!confirm(`รูปสองรูปตรงกันแค่ ${Math.round(r.corr*100)}% สีที่ได้อาจเพี้ยน\nแนะนำให้ถ่ายใหม่โดยไม่ขยับกล้อง\n\nบันทึกต่อไหม?`))return;
+  const o={name,lut:r.lut,mono:r.mono,q:Math.round(r.corr*100)};
+  const i=looks.findIndex(l=>l.name===name);if(i>=0)looks[i]=o;else looks.push(o);
+  saveLooks();fileB=null;$('bName').textContent='';
+  renderSaved();selectLook(looks.indexOf(o)+1);
+  toast(`บันทึกโทน "${name}" แล้ว · รูปตรงกัน ${o.q}% · ใช้รูปต้นฉบับเดิมสอน Look ถัดไปได้เลย`);
+ }catch(e){busy(false);alert('ผิดพลาด: '+e.message);}
+};
+$('bkBtn').onclick=()=>{
+ if(!looks.length){toast('ยังไม่มีโทนให้สำรอง');return;}
+ const b=new Blob([localStorage.getItem(LS)||'[]'],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cine-looks-backup.json';
+ document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},5000);
+ toast('บันทึกไฟล์สำรองไว้ในโฟลเดอร์ Downloads แล้ว');
+};
+$('rsBtn').onclick=()=>$('fJ').click();
+$('fJ').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{const arr=JSON.parse(await f.text());let c=0;
+  arr.forEach(o=>{const l={name:o.name,mono:!!o.mono,q:o.q||0,lut:unb64(o.d)};if(l.lut.length!==N3*3)return;
+   const i=looks.findIndex(x=>x.name===l.name);if(i>=0)looks[i]=l;else looks.push(l);c++;});
+  saveLooks();renderSaved();renderLooks();toast(`กู้คืนแล้ว ${c} โทน`);
+ }catch(err){alert('ไฟล์สำรองไม่ถูกต้อง');}
+};
+
 /* ---------- กรอบ EXIF ---------- */
 function drawFrame(ctx,W,y0,bh){
- const L=LOOKS[lookIdx],F='system-ui,-apple-system,Roboto,sans-serif';
+ const F='system-ui,-apple-system,Roboto,sans-serif';
  ctx.fillStyle='#fff';ctx.fillRect(0,y0,W,bh);
  const pad=bh*0.42,cy=y0+bh/2,s1=Math.round(bh*0.2),s2=Math.round(bh*0.14);
  const model=frameMode===2?'Leica Leitzphone':'Xiaomi 17 Ultra';
- const look=lookIdx===0?'':L.name;
+ const look=lookIdx>0?looks[lookIdx-1].name:'';
  const sub=frameMode===2?('powered by Xiaomi'+(look?' · '+look:'')):(look||'Leica Imaging');
- const fl=crop?crop:exif[0xA405];
- const ap=bokeh?fnum:(exif[0x829D]?+exif[0x829D].toFixed(2):0);
+ const fl=crop||(hasF?baseF:0);
+ const ap=exif[0x829D]?+exif[0x829D].toFixed(2):0;
  const iso=exif[0x8827],et=exif[0x829A];
  const params=[fl?fl+'mm':'',ap?'f/'+ap:'',et?fmtExp(et):'',iso?'ISO'+iso:''].filter(Boolean).join('  ');
  const date=fmtDate(exif[0x9003]||exif[0x0132]);
@@ -391,28 +491,28 @@ function drawFrame(ctx,W,y0,bh){
  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Leica',dx,cy+r*0.04);
 }
 
-/* ---------- Export ความละเอียดเต็ม (แบ่งเป็นช่อง) ---------- */
+/* ---------- Export ความละเอียดเต็ม ---------- */
 function saveBlob(b){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`LeicaCine_${Date.now()}.jpg`;
  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},10000);}
 async function exportImage(){
  if(!loaded){toast('กด "ถ่ายรูป" หรือ "นำเข้ารูป" ก่อน');return;}
  exporting=true;busy(true,'กำลังเรนเดอร์ความละเอียดเต็ม...');await sleep(50);
  try{
-  const cs=cropScale(),{ow,oh}=outDims();
+  const {cs,ox,oy}=cropRect(),{ow,oh}=outDims();
   const bh=frameMode?Math.round(Math.max(ow,oh)*0.065):0;
   const out=document.createElement('canvas');out.width=ow;out.height=oh+bh;
   const ctx=out.getContext('2d');if(!ctx)throw new Error('หน่วยความจำไม่พอ');
   cv.width=2048;cv.height=2048;
   const T=Math.min(2048,gl.drawingBufferWidth,gl.drawingBufferHeight),CH=gl.drawingBufferHeight;
   const tile=document.createElement('canvas'),tctx=tile.getContext('2d');
-  const cO=(1-cs)/2,nt=Math.ceil(ow/T)*Math.ceil(oh/T);let k=0;
+  const nt=Math.ceil(ow/T)*Math.ceil(oh/T);let k=0;
   for(let ty=0;ty<oh;ty+=T)for(let tx=0;tx<ow;tx+=T){
    const tw=Math.min(T,ow-tx),th=Math.min(T,oh-ty);
-   const ax=Math.max(0,Math.floor((cO+tx/ow*cs)*srcW)-2),bx=Math.min(srcW,Math.ceil((cO+(tx+tw)/ow*cs)*srcW)+2);
-   const ay=Math.max(0,Math.floor((cO+ty/oh*cs)*srcH)-2),by=Math.min(srcH,Math.ceil((cO+(ty+th)/oh*cs)*srcH)+2);
+   const ax=Math.max(0,Math.floor((ox+tx/ow*cs)*srcW)-2),bx=Math.min(srcW,Math.ceil((ox+(tx+tw)/ow*cs)*srcW)+2);
+   const ay=Math.max(0,Math.floor((oy+ty/oh*cs)*srcH)-2),by=Math.min(srcH,Math.ceil((oy+(ty+th)/oh*cs)*srcH)+2);
    tile.width=bx-ax;tile.height=by-ay;tctx.drawImage(bmp,ax,ay,bx-ax,by-ay,0,0,bx-ax,by-ay);
    up(texTile,tile);
-   render({sharp:texTile,sO:[ax/srcW,ay/srcH],sS:[(bx-ax)/srcW,(by-ay)/srcH],ow,oh,tx,ty,tw,th,ch:CH,taps:128,seed:7.31});
+   render({sharp:texTile,sO:[ax/srcW,ay/srcH],sS:[(bx-ax)/srcW,(by-ay)/srcH],cO:[ox,oy],cS:cs,ow,oh,tx,ty,tw,th,ch:CH,seed:7.31});
    ctx.drawImage(cv,0,0,tw,th,tx,ty,tw,th);
    $('busyT').textContent=`กำลังเรนเดอร์... ${Math.round(++k/nt*100)}%`;await sleep(0);
   }
@@ -431,13 +531,14 @@ $('shutter').onclick=()=>{if(!exporting)exportImage();};
 function loop(){
  if(!exporting){
   if(loaded&&dirty&&cv.width){
-   render({sharp:texSoft,sO:[0,0],sS:[1,1],ow:cv.width,oh:cv.height,tx:0,ty:0,tw:cv.width,th:cv.height,ch:cv.height,taps:64,seed:7.31});
+   render({sharp:texSoft,sO:[0,0],sS:[1,1],cO:[0,0],cS:1,ow:cv.width,oh:cv.height,tx:0,ty:0,tw:cv.width,th:cv.height,ch:cv.height,seed:7.31});
    dirty=false;
   }
   drawOverlay();
  }
  requestAnimationFrame(loop);
 }
+renderLooks();setCrop(0,false);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 requestAnimationFrame(loop);
 </script>
