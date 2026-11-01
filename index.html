@@ -18,8 +18,9 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
 #frame{position:relative;touch-action:none}
 #gl,#overlay{position:absolute;inset:0;width:100%;height:100%;display:block}
 #overlay{pointer-events:none}
-#msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:14px;color:#aaa;width:80%;line-height:1.6}
-#controls{padding:4px 0 calc(env(safe-area-inset-bottom) + 10px)}
+#msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:14px;color:#aaa;width:85%;line-height:1.8}
+#info{font-size:11px;color:#999;text-align:center;padding:3px 8px;min-height:18px}
+#controls{padding:2px 0 calc(env(safe-area-inset-bottom) + 10px)}
 .row{display:flex;gap:6px;overflow-x:auto;padding:4px 12px;scrollbar-width:none}
 .row::-webkit-scrollbar{display:none}
 .chip{flex:none;border:1px solid #444;background:#111;color:#ddd;border-radius:16px;padding:6px 12px;font-size:12px;white-space:nowrap}
@@ -28,13 +29,14 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
 .slider{display:flex;align-items:center;gap:10px;padding:3px 16px;font-size:12px}
 .slider label{width:78px;color:#aaa}
 .slider input{flex:1;accent-color:#e20612}
+.slider input:disabled{opacity:.3}
 .slider span{width:44px;text-align:right;font-variant-numeric:tabular-nums}
 #adv{display:none}
 #adv.show{display:block}
 #bottom{display:flex;align-items:center;justify-content:space-between;padding:8px 22px 0}
 .btn{background:#1b1b1b;border:1px solid #333;color:#eee;border-radius:12px;padding:10px 8px;font-size:12px;width:90px}
-#shutter{width:72px;height:72px;border-radius:50%;border:4px solid #fff;background:#e20612;color:#fff;font-size:11px;font-weight:700}
-#busy{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:9;font-size:14px}
+#shutter{width:72px;height:72px;border-radius:50%;border:4px solid #fff;background:#e20612;color:#fff;font-size:12px;font-weight:700}
+#busy{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:9;font-size:14px}
 #busy.show{display:flex}
 .spin{width:40px;height:40px;border:4px solid #333;border-top-color:#e20612;border-radius:50%;animation:s 1s linear infinite}
 @keyframes s{to{transform:rotate(360deg)}}
@@ -52,14 +54,15 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
   </div>
   <div id="stage">
     <div id="frame"><canvas id="gl"></canvas><canvas id="overlay"></canvas></div>
-    <div id="msg">กำลังเปิดกล้อง...</div>
+    <div id="msg">กด <b>ถ่ายรูป</b> เพื่อเปิดกล้อง Xiaomi<br>หรือกด <b>นำเข้ารูป</b> เพื่อเลือกรูปจากแกลเลอรี<br><br><small>แนะนำ: ถ่ายด้วยแอปกล้อง Xiaomi (โหมดพอร์ตเทรต 50MP)<br>แล้วนำเข้ามาแต่งโทนที่นี่</small></div>
   </div>
+  <div id="info"></div>
   <div id="controls">
     <div class="row" id="lensRow"></div>
-    <div class="slider"><label>รูรับแสง</label><input type="range" id="ap" min="0" max="100" value="0"><span id="apV"></span></div>
+    <div class="slider"><button class="chip" id="bokehBtn">เบลอเสริม: ปิด</button><input type="range" id="ap" min="0" max="100" value="0"><span id="apV"></span></div>
     <div id="adv">
-      <div class="slider"><label>Halation</label><input type="range" id="hal" min="0" max="100" value="35"><span id="halV"></span></div>
-      <div class="slider"><label>เกรน 35mm</label><input type="range" id="grain" min="0" max="100" value="30"><span id="grainV"></span></div>
+      <div class="slider"><label>Halation</label><input type="range" id="hal" min="0" max="100" value="0"><span id="halV"></span></div>
+      <div class="slider"><label>เกรน 35mm</label><input type="range" id="grain" min="0" max="100" value="0"><span id="grainV"></span></div>
       <div class="slider"><label>ขนาดเกรน</label><input type="range" id="gsize" min="8" max="40" value="15"><span id="gsizeV"></span></div>
       <div class="slider"><label>บอลโบเก้</label><input type="range" id="ball" min="0" max="100" value="50"><span id="ballV"></span></div>
       <div class="slider"><label>โซนโฟกัส</label><input type="range" id="zone" min="5" max="40" value="16"><span id="zoneV"></span></div>
@@ -67,12 +70,13 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
     <div class="row" id="lookRow"></div>
     <div id="bottom">
       <button class="btn" id="importBtn">นำเข้ารูป</button>
-      <button id="shutter"></button>
-      <button class="btn" id="modeBtn">สลับกล้อง</button>
+      <button id="shutter">SAVE</button>
+      <button class="btn" id="camBtn">ถ่ายรูป</button>
     </div>
   </div>
 </div>
 <input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="camFile" accept="image/*" capture="environment" hidden>
 <div id="busy"><div class="spin"></div><div id="busyT">กำลังประมวลผล...</div></div>
 <div id="toast"></div>
 
@@ -80,9 +84,10 @@ html,body{height:100%;background:#000;color:#eee;font-family:system-ui,-apple-sy
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-/* ---------- โทนสี (ค่าประมาณจากคาแรกเตอร์ของแต่ละโปรไฟล์) ---------- */
-const D={temp:0,tint:0,con:1,curve:0,sat:1,red:0,teal:0,sh:[0,0,0],hi:[0,0,0],split:1,fade:0,roll:0,vig:.2,mono:0,mw:[.299,.587,.114],hal:20,grain:20};
+/* ---------- โทนสี ---------- */
+const D={temp:0,tint:0,con:1,curve:0,sat:1,red:0,teal:0,sh:[0,0,0],hi:[0,0,0],split:1,fade:0,roll:0,vig:0,mono:0,mw:[.299,.587,.114],hal:0,grain:0};
 const LOOKS=[
+ {name:'Original (สีจากกล้อง)'},
  {name:'Leica Authentic',temp:.01,con:1.12,curve:.25,sat:.95,red:.12,sh:[0,0,.012],hi:[.012,.006,0],roll:.15,vig:.3,hal:15,grain:10},
  {name:'Leica Vibrant',temp:.015,con:1.08,curve:.2,sat:1.22,red:.15,sh:[0,0,.01],hi:[.01,.005,0],roll:.25,vig:.18,hal:10,grain:5},
  {name:'Leica M10-R (Maestro II)',temp:.025,tint:-.005,con:1.06,curve:.3,sat:1.04,red:.25,teal:.1,sh:[-.004,.002,.012],hi:[.015,.008,-.004],fade:.01,roll:.35,vig:.22,hal:15,grain:12},
@@ -94,16 +99,14 @@ const LOOKS=[
  {name:'Ilford HP5 Plus B&W',mono:1,mw:[.32,.5,.18],con:1.12,curve:.35,fade:.03,roll:.15,vig:.3,hal:0,grain:60},
  {name:'Kodak Portra 400',temp:.04,tint:-.005,con:.92,curve:.2,sat:.88,red:.08,teal:.15,sh:[0,.01,.02],hi:[.035,.018,-.008],fade:.04,roll:.4,vig:.15,hal:25,grain:30}
 ].map(l=>({...D,...l}));
-const LENSES=[23,35,50,75,85];
+const CROPS=[0,35,50,75,85];
+const MAXPX=60e6;
 
-let lensF=50,fnum=1.2,lookIdx=0,hal=.35,grain=.3,gsz=1.5,ball=.5,zone=.16;
-let focus={x:.5,y:.42},focusT=0,locked=false;
-let mode='cam',facing='environment',stream=null,track=null;
-let srcW=0,srcH=0,dirty=true,exporting=false,frameMode=1;
-let photoW=0,photoH=0,softW=0,softH=0,photoExif={};
+let crop=0,baseF=23,fnum=1.2,bokeh=false,lookIdx=0,hal=0,grain=0,gsz=1.5,ball=.5,zone=.16;
+let focus={x:.5,y:.42},focusT=0;
+let bmp=null,srcW=0,srcH=0,softW=0,softH=0,exif={},loaded=false;
+let dirty=true,exporting=false,frameMode=1;
 
-const video=document.createElement('video');
-video.muted=true;video.playsInline=true;video.setAttribute('playsinline','');
 const cv=$('gl'),ov=$('overlay'),octx=ov.getContext('2d'),frame=$('frame');
 const gl=cv.getContext('webgl',{preserveDrawingBuffer:true,antialias:false,premultipliedAlpha:false});
 if(!gl)alert('เครื่องนี้ไม่รองรับ WebGL');
@@ -112,8 +115,8 @@ if(!gl)alert('เครื่องนี้ไม่รองรับ WebGL');
 const VS=`attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}`;
 const FS=`precision highp float;
 uniform sampler2D uSharp,uSoft;
-uniform vec2 uSoftPx,uCropS,uCropO,uFocus,uOut,uTileO;
-uniform float uCanvasH,uAspect,uRad,uHalR,uFocusR,uSigma,uTaps,uBall,uHal,uGrain,uGSize,uSeed,uVig;
+uniform vec2 uSoftPx,uCropS,uCropO,uSharpO,uSharpS,uFocus,uOut,uTileO;
+uniform float uCanvasH,uAspect,uRad,uHalR,uFocusR,uSigma,uTaps,uBall,uHal,uGrain,uGSize,uSeed,uVig,uBokeh;
 uniform float uTemp,uTint,uCon,uCurve,uSat,uRed,uTeal,uSplit,uFade,uRoll,uMono;
 uniform vec3 uSh,uHi,uMw;
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
@@ -126,33 +129,32 @@ void main(){
  vec2 px=uTileO+vec2(gl_FragCoord.x,uCanvasH-gl_FragCoord.y);
  vec2 uv=px/uOut;
  vec2 tc=uCropO+uv*uCropS;
- vec3 sharp=lin(texture2D(uSharp,tc).rgb);
- /* Elliptical Gaussian Falloff */
- vec2 d=uv-uFocus; d.x*=uAspect;
- float e=length(vec2(d.x/0.62,d.y));
- float x=max(e-uFocusR,0.0);
- float coc=1.0-exp(-(x*x)/(2.0*uSigma*uSigma));
- float r=coc*uRad;
+ vec3 sharp=lin(texture2D(uSharp,(tc-uSharpO)/uSharpS).rgb);
  vec3 col=sharp;
- if(r>0.35){
-  vec2 cd=uv-0.5; cd.x*=uAspect; float cl=length(cd);
-  vec2 n=cl>0.001?cd/cl:vec2(0.0);
-  float sq=clamp(cl*0.8,0.0,0.45);
-  float rot=hash(px+uSeed)*6.2831853;
-  vec3 acc=vec3(0.0); float ws=0.0;
-  for(int i=0;i<160;i++){
-   if(float(i)>=uTaps) break;
-   float fi=float(i)+0.5;
-   float a=fi*2.3999632+rot;
-   vec2 o=vec2(cos(a),sin(a))*sqrt(fi/uTaps)*r;
-   o-=n*dot(o,n)*sq;
-   vec3 s=lin(texture2D(uSoft,tc+o/uSoftPx).rgb);
-   float w=1.0+uBall*12.0*smoothstep(0.5,1.0,luma(s));
-   acc+=s*w; ws+=w;
+ if(uBokeh>0.5){
+  vec2 d=uv-uFocus; d.x*=uAspect;
+  float e=length(vec2(d.x/0.62,d.y));
+  float x=max(e-uFocusR,0.0);
+  float r=(1.0-exp(-(x*x)/(2.0*uSigma*uSigma)))*uRad;
+  if(r>0.35){
+   vec2 cd=uv-0.5; cd.x*=uAspect; float cl=length(cd);
+   vec2 n=cl>0.001?cd/cl:vec2(0.0);
+   float sq=clamp(cl*0.8,0.0,0.45);
+   float rot=hash(px+uSeed)*6.2831853;
+   vec3 acc=vec3(0.0); float ws=0.0;
+   for(int i=0;i<160;i++){
+    if(float(i)>=uTaps) break;
+    float fi=float(i)+0.5;
+    float a=fi*2.3999632+rot;
+    vec2 o=vec2(cos(a),sin(a))*sqrt(fi/uTaps)*r;
+    o-=n*dot(o,n)*sq;
+    vec3 s=lin(texture2D(uSoft,tc+o/uSoftPx).rgb);
+    float w=1.0+uBall*12.0*smoothstep(0.5,1.0,luma(s));
+    acc+=s*w; ws+=w;
+   }
+   col=mix(sharp,acc/ws,clamp(r/1.5,0.0,1.0));
   }
-  col=mix(sharp,acc/ws,clamp(r/1.5,0.0,1.0));
  }
- /* Halation */
  if(uHal>0.001){
   vec3 h=vec3(0.0);
   for(int i=0;i<12;i++){
@@ -163,7 +165,6 @@ void main(){
   }
   col+=h/12.0*vec3(1.0,0.3,0.08)*uHal*4.0;
  }
- /* Color grade */
  vec3 c=gam(col);
  c*=vec3(1.0+uTemp,1.0+uTint,1.0-uTemp);
  float L=dot(c,vec3(0.299,0.587,0.114));
@@ -183,12 +184,13 @@ void main(){
  c=mix(vec3(uFade),vec3(1.0-uFade*0.4),c);
  vec2 vv=uv-0.5; vv.x*=uAspect;
  c*=1.0-uVig*smoothstep(0.25,0.85,length(vv)*1.2);
- /* 35mm grain */
- float g=(vnoise(px/uGSize+uSeed*13.0)-0.5)*1.6+(hash(px+uSeed)-0.5)*0.4;
- float gm=1.0-pow(abs(L2-0.5)*2.0,2.0)*0.75;
- vec3 gc=vec3(g);
- if(uMono<0.5) gc+=(vec3(vnoise(px/uGSize+31.0+uSeed),vnoise(px/uGSize+57.0+uSeed),vnoise(px/uGSize+83.0+uSeed))-0.5)*0.5;
- c+=gc*uGrain*0.12*gm;
+ if(uGrain>0.001){
+  float g=(vnoise(px/uGSize+uSeed*13.0)-0.5)*1.6+(hash(px+uSeed)-0.5)*0.4;
+  float gm=1.0-pow(abs(L2-0.5)*2.0,2.0)*0.75;
+  vec3 gc=vec3(g);
+  if(uMono<0.5) gc+=(vec3(vnoise(px/uGSize+31.0+uSeed),vnoise(px/uGSize+57.0+uSeed),vnoise(px/uGSize+83.0+uSeed))-0.5)*0.5;
+  c+=gc*uGrain*0.12*gm;
+ }
  gl_FragColor=vec4(clamp(c,0.0,1.0),1.0);
 }`;
 function mkShader(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o;}
@@ -203,19 +205,23 @@ const f1=(n,a)=>gl.uniform1f(u(n),a),f2=(n,a,b)=>gl.uniform2f(u(n),a,b);
 function mkTex(){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);return t;}
-const texCam=mkTex(),texFull=mkTex(),texSoft=mkTex();
+const texSoft=mkTex(),texTile=mkTex();
 function up(t,src){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);}
+
+const cropScale=()=>(crop&&crop>baseF)?baseF/crop:1;
+function outDims(){const cs=cropScale();return{ow:Math.round(srcW*cs),oh:Math.round(srcH*cs)};}
 
 function render(p){
  gl.viewport(0,p.ch-p.th,p.tw,p.th);
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,p.sharp);
- gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,p.soft);
+ gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,texSoft);
  gl.uniform1i(u('uSharp'),0);gl.uniform1i(u('uSoft'),1);
- const cs=23/lensF,short=Math.min(p.sw,p.sh)*cs;
- f2('uCropS',cs,cs);f2('uCropO',(1-cs)/2,(1-cs)/2);f2('uSoftPx',p.sw,p.sh);
- f2('uOut',p.ow,p.oh);f2('uTileO',p.tx,p.ty);f2('uFocus',focus.x,focus.y);
- f1('uCanvasH',p.ch);f1('uAspect',p.ow/p.oh);
- f1('uRad',short*0.035*(lensF/50)*(1.2/fnum));
+ const cs=cropScale(),short=Math.min(softW,softH)*cs,effF=baseF/cs;
+ f2('uCropS',cs,cs);f2('uCropO',(1-cs)/2,(1-cs)/2);
+ f2('uSharpO',p.sO[0],p.sO[1]);f2('uSharpS',p.sS[0],p.sS[1]);
+ f2('uSoftPx',softW,softH);f2('uOut',p.ow,p.oh);f2('uTileO',p.tx,p.ty);f2('uFocus',focus.x,focus.y);
+ f1('uCanvasH',p.ch);f1('uAspect',p.ow/p.oh);f1('uBokeh',bokeh?1:0);
+ f1('uRad',short*0.035*(effF/50)*(1.2/fnum));
  f1('uHalR',short*0.012);
  f1('uSigma',0.10+0.30*(fnum-1.2)/6.8);
  f1('uFocusR',zone);f1('uTaps',p.taps);f1('uBall',ball);f1('uHal',hal);f1('uGrain',grain);
@@ -227,9 +233,9 @@ function render(p){
 }
 
 /* ---------- Layout ---------- */
-function layout(sw,sh){
- if(!sw||!sh)return; srcW=sw;srcH=sh;
- const st=$('stage').getBoundingClientRect(),ar=sw/sh;
+function layout(){
+ if(!srcW||!srcH)return;
+ const st=$('stage').getBoundingClientRect(),ar=srcW/srcH;
  let w=st.width,h=w/ar; if(h>st.height){h=st.height;w=h*ar;}
  frame.style.width=w+'px';frame.style.height=h+'px';
  const dpr=Math.min(devicePixelRatio||1,2);
@@ -237,14 +243,26 @@ function layout(sw,sh){
  if(m<1){cw=Math.round(cw*m);ch=Math.round(ch*m);}
  cv.width=cw;cv.height=ch;ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr);dirty=true;
 }
-new ResizeObserver(()=>{if(srcW)layout(srcW,srcH);}).observe($('stage'));
+new ResizeObserver(layout).observe($('stage'));
 
 /* ---------- UI ---------- */
-function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,2600);}
+function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,3000);}
 function busy(on,t){$('busy').classList.toggle('show',on);if(t)$('busyT').textContent=t;}
-LENSES.forEach(f=>{const b=document.createElement('button');b.className='chip'+(f===lensF?' on':'');b.textContent=f+'mm';
- b.onclick=()=>{lensF=f;[...$('lensRow').children].forEach(c=>c.classList.toggle('on',c===b));dirty=true;
-  toast(f===23?'23mm = เลนส์หลักเต็มเฟรม':`ครอปเป็น ${f}mm (${(f/23).toFixed(1)}x)`);};$('lensRow').appendChild(b);});
+const mp=x=>(x/1e6).toFixed(1)+'MP';
+function showInfo(){
+ if(!loaded){$('info').textContent='';return;}
+ const o=outDims();
+ $('info').textContent=`ต้นฉบับ ${srcW}×${srcH} (${mp(srcW*srcH)})  →  เซฟ ${o.ow}×${o.oh} (${mp(o.ow*o.oh)})`;
+ [...$('lensRow').children].forEach(c=>{const f=+c.dataset.f;c.style.opacity=(f&&f<=baseF)?.3:1;});
+}
+CROPS.forEach(f=>{const b=document.createElement('button');b.className='chip';b.dataset.f=f;
+ b.textContent=f?f+'mm':'เต็มเฟรม';b.onclick=()=>setCrop(f,true);$('lensRow').appendChild(b);});
+function setCrop(f,tell){
+ if(f&&f<=baseF){toast(`รูปนี้ถ่ายที่ ${baseF}mm อยู่แล้ว ครอปเป็น ${f}mm ไม่ได้`);return;}
+ crop=f;[...$('lensRow').children].forEach(c=>c.classList.toggle('on',+c.dataset.f===f));
+ dirty=true;showInfo();
+ if(tell&&loaded){const o=outDims();toast(f?`ครอป ${f}mm · ไฟล์จะเหลือ ${mp(o.ow*o.oh)}`:`เต็มเฟรม · ความละเอียดเต็ม ${mp(o.ow*o.oh)}`);}
+}
 function bind(id,fn){const el=$(id);el.oninput=()=>{$(id+'V').textContent=fn(+el.value);dirty=true;};el.oninput();}
 function setSlider(id,v){$(id).value=v;$(id).oninput();}
 bind('ap',v=>{fnum=Math.round(1.2*Math.pow(8/1.2,v/100)*10)/10;return 'f/'+fnum;});
@@ -253,18 +271,23 @@ bind('grain',v=>{grain=v/100;return v;});
 bind('gsize',v=>{gsz=v/10;return (v/10).toFixed(1);});
 bind('ball',v=>{ball=v/100;return v;});
 bind('zone',v=>{zone=v/100;return v;});
+function setBokeh(on){bokeh=on;$('bokehBtn').textContent='เบลอเสริม: '+(on?'เปิด':'ปิด');
+ $('bokehBtn').classList.toggle('on',on);$('ap').disabled=!on;dirty=true;
+ if(on)toast('แตะที่ตัวแบบเพื่อล็อกโฟกัส (เบลอจำลอง ไม่ใช่เบลอจากเลนส์)');}
+$('bokehBtn').onclick=()=>setBokeh(!bokeh);
 function selectLook(i){lookIdx=i;[...$('lookRow').children].forEach((c,k)=>c.classList.toggle('on',k===i));
  setSlider('hal',LOOKS[i].hal);setSlider('grain',LOOKS[i].grain);dirty=true;}
 LOOKS.forEach((l,i)=>{const b=document.createElement('button');b.className='chip';b.textContent=l.name;b.onclick=()=>selectLook(i);$('lookRow').appendChild(b);});
-selectLook(0);
 $('advBtn').onclick=()=>$('adv').classList.toggle('show');
 const FM=['กรอบ: ปิด','กรอบ: Xiaomi','กรอบ: Leitzphone'];
 $('frameBtn').onclick=()=>{frameMode=(frameMode+1)%3;$('frameBtn').textContent=FM[frameMode];};
-frame.addEventListener('pointerdown',e=>{const r=frame.getBoundingClientRect();
- focus={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};focusT=performance.now();locked=true;dirty=true;});
+frame.addEventListener('pointerdown',e=>{if(!bokeh)return;const r=frame.getBoundingClientRect();
+ focus={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};focusT=performance.now();dirty=true;});
+setCrop(0);setBokeh(false);selectLook(0);
 
 function drawOverlay(){
- const W=ov.width,H=ov.height;octx.clearRect(0,0,W,H);
+ const W=ov.width,H=ov.height;if(!W)return;octx.clearRect(0,0,W,H);
+ if(!bokeh||!loaded)return;
  const a=Math.max(0,1-(performance.now()-focusT)/2200),x=focus.x*W,y=focus.y*H,s=Math.min(W,H)*0.07;
  if(a>0){octx.save();octx.globalAlpha=a;octx.lineWidth=Math.max(1.5,W/400);
   octx.strokeStyle='rgba(255,255,255,.7)';octx.setLineDash([8,8]);octx.beginPath();
@@ -272,38 +295,11 @@ function drawOverlay(){
   octx.strokeStyle='#ffcc00';const k=s*0.35;
   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sy])=>{octx.beginPath();octx.moveTo(x+sx*s,y+sy*(s-k));octx.lineTo(x+sx*s,y+sy*s);octx.lineTo(x+sx*(s-k),y+sy*s);octx.stroke();});
   octx.restore();}
- if(locked){octx.globalAlpha=0.45+0.55*a;octx.fillStyle='#ffcc00';octx.font=`600 ${Math.round(H*0.022)}px system-ui`;
-  octx.textAlign='center';octx.fillText('AF-L · BOKEH LOCK',x,y+s+H*0.035);octx.globalAlpha=1;}
+ octx.globalAlpha=0.45+0.55*a;octx.fillStyle='#ffcc00';octx.font=`600 ${Math.round(H*0.022)}px system-ui`;
+ octx.textAlign='center';octx.fillText('AF-L · BOKEH LOCK',x,y+s+H*0.035);octx.globalAlpha=1;
 }
 
-/* ---------- Camera ---------- */
-function stopCam(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;track=null;}
-async function startCam(){
- stopCam();
- try{
-  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1440}}});
-  track=stream.getVideoTracks()[0];video.srcObject=stream;await video.play();
-  mode='cam';srcW=0;$('msg').style.display='none';$('modeBtn').textContent='สลับกล้อง';$('shutter').textContent='';
- }catch(e){
-  $('msg').style.display='block';
-  $('msg').innerHTML='เปิดกล้องไม่ได้<br>ต้องเปิดผ่านลิงก์ https และกด "อนุญาต" กล้อง<br>ยังใช้ปุ่ม "นำเข้ารูป" ได้ตามปกติ';
- }
-}
-$('modeBtn').onclick=()=>{if(mode==='photo')startCam();else{facing=facing==='environment'?'user':'environment';startCam();}};
-
-/* ---------- Image helpers ---------- */
-function scaleCanvas(src,s){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(src.width*s));c.height=Math.max(1,Math.round(src.height*s));
- const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(src,0,0,c.width,c.height);return c;}
-function rot90(src){const c=document.createElement('canvas');c.width=src.height;c.height=src.width;const x=c.getContext('2d');
- x.translate(c.width,0);x.rotate(Math.PI/2);x.drawImage(src,0,0);return c;}
-function uploadPhoto(src){
- const mt=gl.getParameter(gl.MAX_TEXTURE_SIZE);
- if(Math.max(src.width,src.height)>mt)src=scaleCanvas(src,mt/Math.max(src.width,src.height));
- photoW=src.width;photoH=src.height;up(texFull,src);
- const s=scaleCanvas(src,Math.min(1,1600/Math.max(src.width,src.height)));softW=s.width;softH=s.height;up(texSoft,s);
-}
-
-/* ---------- EXIF ---------- */
+/* ---------- EXIF / JPEG ---------- */
 function parseExif(buf){
  try{const v=new DataView(buf);if(v.getUint16(0)!==0xFFD8)return{};let o=2;
   while(o+4<v.byteLength){const m=v.getUint16(o),len=v.getUint16(o+2);
@@ -323,22 +319,63 @@ function readTiff(v,t){
    else if(type===5)val=g32(p)/(g32(p+4)||1);
    else if(type===10)val=v.getInt32(p,le)/(v.getInt32(p+4,le)||1);
    else continue;out[tag]=val;}};
- ifd(g32(t+4));if(out[0x8769])ifd(out[0x8769]);return out;
+ try{ifd(g32(t+4));if(out[0x8769])ifd(out[0x8769]);}catch(e){}
+ return out;
+}
+function jpegSize(buf){
+ try{const v=new DataView(buf);if(v.getUint16(0)!==0xFFD8)return null;let o=2;
+  while(o+9<v.byteLength){const m=v.getUint16(o);if((m&0xFF00)!==0xFF00)return null;
+   if(m>=0xFFC0&&m<=0xFFCF&&m!==0xFFC4&&m!==0xFFC8&&m!==0xFFCC)return{h:v.getUint16(o+5),w:v.getUint16(o+7)};
+   o+=2+v.getUint16(o+2);}
+ }catch(e){}
+ return null;
 }
 const fmtExp=e=>e>=1?(+e.toFixed(1))+'s':'1/'+Math.round(1/e)+'s';
 function fmtDate(s){if(s)return s.replace(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}:\d{2}).*$/,'$1.$2.$3  $4');
  const d=new Date(),z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}  ${z(d.getHours())}:${z(d.getMinutes())}`;}
 
+/* ---------- โหลดรูป ---------- */
+function scaleCanvas(src,s){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(src.width*s));c.height=Math.max(1,Math.round(src.height*s));
+ const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(src,0,0,c.width,c.height);return c;}
+async function loadPhoto(f){
+ if(!f)return;busy(true,'กำลังโหลดรูปความละเอียดเต็ม...');await sleep(30);
+ try{
+  const head=await f.slice(0,1048576).arrayBuffer();
+  exif=parseExif(head);
+  const sz=jpegSize(head);
+  const opt={imageOrientation:'from-image'};
+  if(sz&&sz.w*sz.h>MAXPX){opt.resizeWidth=Math.round(Math.min(sz.w,sz.h)*Math.sqrt(MAXPX/(sz.w*sz.h)));opt.resizeQuality='high';}
+  if(bmp&&bmp.close)bmp.close();
+  try{bmp=await createImageBitmap(f,opt);}catch(_){bmp=await createImageBitmap(f);}
+  srcW=bmp.width;srcH=bmp.height;
+  const s=scaleCanvas(bmp,Math.min(1,2048/Math.max(srcW,srcH)));softW=s.width;softH=s.height;up(texSoft,s);
+  baseF=exif[0xA405]||23;
+  loaded=true;$('msg').style.display='none';
+  if(crop&&crop<=baseF)crop=0;
+  setCrop(crop,false);
+  focus={x:.5,y:.42};layout();
+  toast(`โหลดแล้ว ${srcW}×${srcH} (${mp(srcW*srcH)})${sz&&sz.w*sz.h>MAXPX?' · ย่อจากต้นฉบับเพื่อไม่ให้แอปค้าง':''}`);
+ }catch(err){alert('เปิดรูปนี้ไม่ได้\nถ้าเป็นไฟล์ HEIF ให้ปิด HEIF ในการตั้งค่ากล้อง แล้วถ่ายใหม่เป็น JPEG');}
+ busy(false);
+}
+$('importBtn').onclick=()=>$('file').click();
+$('camBtn').onclick=()=>$('camFile').click();
+$('file').onchange=e=>{loadPhoto(e.target.files[0]);e.target.value='';};
+$('camFile').onchange=e=>{loadPhoto(e.target.files[0]);e.target.value='';};
+
 /* ---------- กรอบ EXIF ---------- */
-function drawFrame(ctx,W,y0,bh,ex){
+function drawFrame(ctx,W,y0,bh){
  const L=LOOKS[lookIdx],F='system-ui,-apple-system,Roboto,sans-serif';
  ctx.fillStyle='#fff';ctx.fillRect(0,y0,W,bh);
  const pad=bh*0.42,cy=y0+bh/2,s1=Math.round(bh*0.2),s2=Math.round(bh*0.14);
  const model=frameMode===2?'Leica Leitzphone':'Xiaomi 17 Ultra';
- const sub=frameMode===2?'powered by Xiaomi · '+L.name:L.name;
- const iso=ex[0x8827],et=ex[0x829A];
- const params=[lensF+'mm','f/'+fnum,et?fmtExp(et):'',iso?'ISO'+iso:''].filter(Boolean).join('  ');
- const date=fmtDate(ex[0x9003]||ex[0x0132]);
+ const look=lookIdx===0?'':L.name;
+ const sub=frameMode===2?('powered by Xiaomi'+(look?' · '+look:'')):(look||'Leica Imaging');
+ const fl=crop?crop:exif[0xA405];
+ const ap=bokeh?fnum:(exif[0x829D]?+exif[0x829D].toFixed(2):0);
+ const iso=exif[0x8827],et=exif[0x829A];
+ const params=[fl?fl+'mm':'',ap?'f/'+ap:'',et?fmtExp(et):'',iso?'ISO'+iso:''].filter(Boolean).join('  ');
+ const date=fmtDate(exif[0x9003]||exif[0x0132]);
  ctx.textBaseline='alphabetic';ctx.textAlign='left';
  ctx.font=`700 ${s1}px ${F}`;ctx.fillStyle='#111';ctx.fillText(model,pad,cy-bh*0.03);
  ctx.font=`400 ${s2}px ${F}`;ctx.fillStyle='#8a8a8a';ctx.fillText(sub,pad,cy+s2*1.35);
@@ -354,69 +391,47 @@ function drawFrame(ctx,W,y0,bh,ex){
  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Leica',dx,cy+r*0.04);
 }
 
-/* ---------- Export ความละเอียดเต็ม ---------- */
+/* ---------- Export ความละเอียดเต็ม (แบ่งเป็นช่อง) ---------- */
 function saveBlob(b){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`LeicaCine_${Date.now()}.jpg`;
- document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},5000);}
-async function exportImage(src,ex){
- exporting=true;busy(true,'กำลังเรนเดอร์ความละเอียดสูง...');await sleep(50);
+ document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},10000);}
+async function exportImage(){
+ if(!loaded){toast('กด "ถ่ายรูป" หรือ "นำเข้ารูป" ก่อน');return;}
+ exporting=true;busy(true,'กำลังเรนเดอร์ความละเอียดเต็ม...');await sleep(50);
  try{
-  if(src)uploadPhoto(src);
-  const cs=23/lensF,ow=Math.round(photoW*cs),oh=Math.round(photoH*cs);
+  const cs=cropScale(),{ow,oh}=outDims();
   const bh=frameMode?Math.round(Math.max(ow,oh)*0.065):0;
-  const out=document.createElement('canvas');out.width=ow;out.height=oh+bh;const ctx=out.getContext('2d');
-  let T=Math.min(2048,gl.getParameter(gl.MAX_VIEWPORT_DIMS)[0]);
-  cv.width=T;cv.height=T;T=Math.min(T,gl.drawingBufferWidth,gl.drawingBufferHeight);const CH=gl.drawingBufferHeight;
-  const nt=Math.ceil(ow/T)*Math.ceil(oh/T);let k=0;
+  const out=document.createElement('canvas');out.width=ow;out.height=oh+bh;
+  const ctx=out.getContext('2d');if(!ctx)throw new Error('หน่วยความจำไม่พอ');
+  cv.width=2048;cv.height=2048;
+  const T=Math.min(2048,gl.drawingBufferWidth,gl.drawingBufferHeight),CH=gl.drawingBufferHeight;
+  const tile=document.createElement('canvas'),tctx=tile.getContext('2d');
+  const cO=(1-cs)/2,nt=Math.ceil(ow/T)*Math.ceil(oh/T);let k=0;
   for(let ty=0;ty<oh;ty+=T)for(let tx=0;tx<ow;tx+=T){
    const tw=Math.min(T,ow-tx),th=Math.min(T,oh-ty);
-   render({sharp:texFull,soft:texSoft,sw:softW,sh:softH,ow,oh,tx,ty,tw,th,ch:CH,taps:128,seed:7.31});
+   const ax=Math.max(0,Math.floor((cO+tx/ow*cs)*srcW)-2),bx=Math.min(srcW,Math.ceil((cO+(tx+tw)/ow*cs)*srcW)+2);
+   const ay=Math.max(0,Math.floor((cO+ty/oh*cs)*srcH)-2),by=Math.min(srcH,Math.ceil((cO+(ty+th)/oh*cs)*srcH)+2);
+   tile.width=bx-ax;tile.height=by-ay;tctx.drawImage(bmp,ax,ay,bx-ax,by-ay,0,0,bx-ax,by-ay);
+   up(texTile,tile);
+   render({sharp:texTile,sO:[ax/srcW,ay/srcH],sS:[(bx-ax)/srcW,(by-ay)/srcH],ow,oh,tx,ty,tw,th,ch:CH,taps:128,seed:7.31});
    ctx.drawImage(cv,0,0,tw,th,tx,ty,tw,th);
    $('busyT').textContent=`กำลังเรนเดอร์... ${Math.round(++k/nt*100)}%`;await sleep(0);
   }
-  if(bh)drawFrame(ctx,ow,oh,bh,ex||{});
-  $('busyT').textContent='กำลังบันทึกไฟล์...';
+  if(bh)drawFrame(ctx,ow,oh,bh);
+  $('busyT').textContent='กำลังบันทึกไฟล์ (รูปใหญ่อาจใช้ 10–30 วินาที)...';await sleep(30);
   const blob=await new Promise(r=>out.toBlob(r,'image/jpeg',0.95));
-  if(!blob)throw new Error('หน่วยความจำไม่พอ');
-  saveBlob(blob);toast(`บันทึกแล้ว ${ow}×${oh+bh}px · ดูในแกลเลอรี > Downloads`);
+  if(!blob)throw new Error('หน่วยความจำไม่พอ ลองปิดแอปอื่นแล้วลองใหม่');
+  saveBlob(blob);
+  toast(`บันทึกแล้ว ${ow}×${oh+bh} · ${(blob.size/1048576).toFixed(1)}MB · ดูใน แกลเลอรี > Downloads`);
  }catch(e){alert('ผิดพลาด: '+e.message);}
- exporting=false;busy(false);layout(srcW,srcH);
+ exporting=false;busy(false);layout();
 }
-async function capture(){
- if(!track)return;exporting=true;busy(true,'กำลังถ่าย...');
- let src=null,ex={};
- try{if('ImageCapture' in window){const ic=new ImageCapture(track);let o={};
-   try{const pc=await ic.getPhotoCapabilities();if(pc.imageWidth&&pc.imageWidth.max)o.imageWidth=pc.imageWidth.max;}catch(e){}
-   const b=await ic.takePhoto(o);ex=parseExif(await b.slice(0,262144).arrayBuffer());src=await createImageBitmap(b);}
- }catch(e){src=null;}
- if(!src)src=await createImageBitmap(video);
- if((video.videoHeight>video.videoWidth)!==(src.height>src.width))src=rot90(src);
- await exportImage(src,ex);
-}
-$('shutter').onclick=()=>{if(exporting)return;mode==='cam'?capture():exportImage(null,photoExif);};
-
-/* ---------- นำเข้ารูป ---------- */
-$('importBtn').onclick=()=>$('file').click();
-$('file').onchange=async e=>{
- const f=e.target.files[0];if(!f)return;busy(true,'กำลังโหลดรูป...');
- try{
-  photoExif=parseExif(await f.slice(0,262144).arrayBuffer());
-  let bmp;try{bmp=await createImageBitmap(f,{imageOrientation:'from-image'});}catch(_){bmp=await createImageBitmap(f);}
-  uploadPhoto(bmp);stopCam();mode='photo';$('msg').style.display='none';
-  layout(photoW,photoH);$('modeBtn').textContent='กลับกล้อง';$('shutter').textContent='SAVE';
-  focus={x:.5,y:.42};locked=false;toast(`โหลดแล้ว ${photoW}×${photoH}px · แตะที่ตัวแบบเพื่อโฟกัส`);
- }catch(err){alert('เปิดรูปนี้ไม่ได้ (ถ้าเป็นไฟล์ HEIF ให้ตั้งกล้องเป็น JPEG)');}
- busy(false);e.target.value='';
-};
+$('shutter').onclick=()=>{if(!exporting)exportImage();};
 
 /* ---------- Loop ---------- */
 function loop(){
  if(!exporting){
-  if(mode==='cam'&&video.readyState>=2&&video.videoWidth){
-   if(video.videoWidth!==srcW||video.videoHeight!==srcH)layout(video.videoWidth,video.videoHeight);
-   up(texCam,video);
-   render({sharp:texCam,soft:texCam,sw:srcW,sh:srcH,ow:cv.width,oh:cv.height,tx:0,ty:0,tw:cv.width,th:cv.height,ch:cv.height,taps:32,seed:Math.random()*100});
-  }else if(mode==='photo'&&dirty){
-   render({sharp:texFull,soft:texSoft,sw:softW,sh:softH,ow:cv.width,oh:cv.height,tx:0,ty:0,tw:cv.width,th:cv.height,ch:cv.height,taps:64,seed:7.31});
+  if(loaded&&dirty&&cv.width){
+   render({sharp:texSoft,sO:[0,0],sS:[1,1],ow:cv.width,oh:cv.height,tx:0,ty:0,tw:cv.width,th:cv.height,ch:cv.height,taps:64,seed:7.31});
    dirty=false;
   }
   drawOverlay();
@@ -424,7 +439,7 @@ function loop(){
  requestAnimationFrame(loop);
 }
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-startCam();requestAnimationFrame(loop);
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
